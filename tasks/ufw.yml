@@ -1,0 +1,44 @@
+- name: ufw - install ufw package
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+  notify: Restart ufw
+
+- name: default config for ufw
+  ufw:
+    state: enabled
+    logging: on
+  notify: Restart ufw
+
+- name: ufw - default deny in
+  ufw:
+    policy: deny
+    direction: incoming
+  notify: Restart ufw
+
+- name: ufw - default deny out
+  ufw:
+    policy: deny
+    direction: outgoing
+  notify: Restart ufw
+
+- name: ufw - configure ssh rule
+  ufw:
+    rule: limit
+    direction: in
+    to_port: "{{ sshd_port }}"
+  notify: Restart ufw
+
+- name: ufw - allow outgoing ports
+  ufw: 
+    rule: allow
+    direction: out
+    to_port: "{{ item }}"
+  with_items:
+    - "53"
+    - "123"
+    - "80"
+    - "443"
+    - "{{ mail_port }}" #outgoing mail port
+  notify: Restart ufw
+

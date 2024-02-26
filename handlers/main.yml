@@ -1,0 +1,29 @@
+---
+- name: Restart fail2ban
+  ansible.builtin.systemd:
+    name: fail2ban.service
+    state: restarted
+
+- name: Restart ufw
+  ansible.builtin.systemd:
+    name: ufw.service
+    state: restarted
+
+- name: Restart sshd
+  ansible.builtin.systemd:
+    name: sshd.service
+    state: restarted
+
+- name: Restart auditd
+  ansible.builtin.systemd:
+    name: auditd.service
+    state: restarted
+
+- name: Restart system
+  ansible.builtin.reboot:
+  when:
+    - system_reboot_enabled | bool
+
+- name: Generate auditd Rules
+  command: augenrules --load
+  notify: Restart auditd

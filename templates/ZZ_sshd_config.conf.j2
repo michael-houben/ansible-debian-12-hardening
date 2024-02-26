@@ -1,0 +1,22 @@
+Port {{ sshd_port }}
+Ciphers {{ sshd_ciphers }}
+MACs {{ sshd_macs }}
+Kexalgorithms {{ sshd_kexalgorithms }}
+
+LogLevel VERBOSE
+
+PermitRootLogin no
+
+PubkeyAuthentication yes
+
+AuthorizedKeysFile	.ssh/authorized_keys .ssh/authorized_keys2
+
+GSSAPIAuthentication no
+Protocol 2
+AllowAgentForwarding no
+AllowTcpForwarding no
+ClientAliveCountMax 2
+MaxAuthTries 3
+MaxSessions 2
+GatewayPorts no
+TCPKeepAlive yes

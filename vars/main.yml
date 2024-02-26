@@ -1,0 +1,292 @@
+---
+sshd_config:
+  - parameter: PasswordAuthentication
+    value: "no"
+    config: /etc/ssh/sshd_config
+  - parameter: PermitEmptyPasswords
+    value: "no"
+    config: /etc/ssh/sshd_config
+  - parameter: ChallengeResponseAuthentication
+    value: "no"
+    config: /etc/ssh/sshd_config
+  - parameter: X11Forwarding
+    value: "no"
+    config: /etc/ssh/sshd_config
+
+## Kernel
+## Security hardening from
+## https://madaidans-insecurities.github.io/guides/linux-hardening.html
+sysctl_hardening:
+      ## Kernel self-protection ##
+
+      ## A kernel pointer points to a specific location in kernel memory.
+      ## These can be very useful in exploiting the kernel, but kernel pointers are
+      ## not hidden by default — it is easy to uncover them by, for example, reading
+      ## the contents of /proc/kallsyms. This setting aims to mitigate kernel pointer
+      ## leaks. Alternatively, you can set kernel.kptr_restrict=1 to only hide kernel
+      ## pointers from processes without the CAP_SYSLOG capability.
+      kernel.kptr_restrict: 1
+
+      ## dmesg is the kernel log. It exposes a large amount of useful kernel
+      ## debugging information, but this can often leak sensitive information, such
+      ## as kernel pointers. Changing the above sysctl restricts the kernel log to
+      ## the CAP_SYSLOG capability.
+      kernel.dmesg_restrict: 1
+
+      ## eBPF exposes quite large attack surface. As such, it must be restricted.
+      ## These sysctls restrict eBPF to the CAP_BPF capability (CAP_SYS_ADMIN on
+      ## kernel versions prior to 5.8) and enable JIT hardening techniques, such as
+      ## constant blinding.
+      kernel.unprivileged_bpf_disabled: 1
+      net.core.bpf_jit_harden: 2
+
+      ## This restricts loading TTY line disciplines to the CAP_SYS_MODULE capability
+      ## to prevent unprivileged attackers from loading vulnerable line disciplines
+      ## with the TIOCSETD ioctl which has been abused in a number of exploits before.
+      dev.tty.ldisc_autoload: 0
+
+      ## The userfaultfd() syscall is often abused to exploit use-after-free flaws.
+      ## Due to this, this sysctl is used to restrict this syscall to the
+      ## CAP_SYS_PTRACE capability.
+      vm.unprivileged_userfaultfd: 0
+
+      ## kexec is a system call that is used to boot another kernel during runtime.
+      ## This functionality can be abused to load a malicious kernel and gain
+      ## arbitrary code execution in kernel mode so this sysctl disables it.
+      kernel.kexec_load_disabled: 1
+
+      ## Networking ##
+
+      ## This helps protect against SYN flood attacks which are a form of denial of
+      ## service attack, in which an attacker sends a large amount of bogus SYN
+      ## requests in an attempt to consume enough resources to make the system
+      ## unresponsive to legitimate traffic.
+      net.ipv4.tcp_syncookies: 1
+
+      ## This protects against time-wait assassination by dropping RST packets for
+      ## sockets in the time-wait state.
+      net.ipv4.tcp_rfc1337: 1
+
+      ## This setting makes your system ignore all ICMP requests to avoid Smurf
+      ## attacks, make the device more difficult to enumerate on the network and
+      ## prevent clock fingerprinting through ICMP timestamps.
+      net.ipv4.icmp_echo_ignore_all: 0
+
+      ## Malicious IPv6 router advertisements can result in a man-in-the-middle
+      ## attack so they should be disabled.
+      net.ipv6.conf.all.accept_ra: 0
+
+      ## This disables TCP SACK. SACK is commonly exploited and unnecessary for many
+      ## circumstances so it should be disabled if you don't require it.
+      net.ipv4.tcp_sack: 0
+      net.ipv4.tcp_dsack: 0
+      net.ipv4.tcp_fack: 0
+
+      ## Userspace ##
+
+      ## ptrace is a system call that allows a program to alter and inspect another
+      ## running process which allows attackers to trivially modify the memory of
+      ## other running programs. This restricts usage of ptrace to only processes
+      ## with the CAP_SYS_PTRACE capability. Alternatively, set the sysctl to 3
+      ## to disable ptrace entirely.
+      kernel.yama.ptrace_scope: 2
+
+      ## This only permits symlinks to be followed when outside of a world-writable
+      ## sticky directory, when the owner of the symlink and follower match, or when
+      ## the directory owner matches the symlink's owner. This also prevents
+      ## hardlinks from being created by users that do not have read/write access
+      ## to the source file. Both of these prevent many common TOCTOU races.
+      fs.protected_symlinks: 1
+      fs.protected_hardlinks: 1
+
+      ## These prevent creating files in potentially attacker-controlled environments, 
+      ## such as world-writable directories, to make data spoofing attacks more difficult.
+      fs.protected_fifos: 2
+      fs.protected_regular: 2
+
+      ## ASLR is a common exploit mitigation which randomises the position of
+      ## critical parts of a process in memory. This can make a wide variety of
+      ## exploits harder to pull off as they first require an information leak.
+      ## The above settings increase the bits of entropy used for mmap ASLR,
+      ## improving its effectiveness.
+      vm.mmap_rnd_bits: 32
+      vm.mmap_rnd_compat_bits: 16
+
+## auditd configuration
+auditd_config:
+  - parameter: space_left
+    value: "{{ auditd_space_left }}"
+    config: /etc/audit/auditd.conf
+  - parameter: space_left_action
+    value: "{{ auditd_space_left_action }}"
+    config: /etc/audit/auditd.conf
+  - parameter: action_mail_acct
+    value: "{{ auditd_action_mail_acct }}"
+    config: /etc/audit/auditd.conf
+  - parameter: log_format
+    value: ENRICHED
+    config: /etc/audit/auditd.conf
+
+## auditd rules
+# This variable is used in tasks/auditd.yml to deploy auditd rules
+# for various commands and syscalls.
+#
+# Each dictionary has this structure:
+#
+#   command: the command/syscall to audit (required)
+#   stig_id: the number/ID from the STIG (required)
+#   arch_specific: 'yes' if the rule depends on the architecture type,
+#                  otherwise 'no' (required)
+#   path: the path to the command (optional, default is '/usr/bin')
+#
+audited_commands:
+  - command: chsh
+    stig_id: V-72167
+    arch_specific: no
+  - command: chage
+    stig_id: V-72155
+    arch_specific: no
+  - command: chcon
+    stig_id: V-72139
+    arch_specific: no
+  - command: chmod
+    stig_id: V-72105
+    arch_specific: yes
+  - command: chown
+    stig_id: V-72097
+    arch_specific: yes
+  - command: creat
+    stig_id: V-72123
+    arch_specific: yes
+  - command: crontab
+    stig_id: V-72183
+    arch_specific: no
+  - command: delete_module
+    stig_id: V-72189
+    arch_specific: yes
+  - command: fchmod
+    stig_id: V-72107
+    arch_specific: yes
+  - command: fchmodat
+    stig_id: V-72109
+    arch_specific: yes
+  - command: fchown
+    stig_id: V-72099
+    arch_specific: yes
+  - command: fchownat
+    stig_id: V-72103
+    arch_specific: yes
+  - command: fremovexattr
+    stig_id: V-72119
+    arch_specific: yes
+  - command: fsetxattr
+    stig_id: V-72113
+    arch_specific: yes
+  - command: ftruncate
+    stig_id: V-72133
+    arch_specific: yes
+  - command: init_module
+    stig_id: V-72187
+    arch_specific: yes
+  - command: gpasswd
+    stig_id: V-72153
+    arch_specific: no
+  - command: lchown
+    stig_id: V-72101
+    arch_specific: yes
+  - command: lremovexattr
+    stig_id: V-72121
+    arch_specific: yes
+  - command: lsetxattr
+    stig_id: V-72115
+    arch_specific: yes
+  - command: mount
+    path: /bin
+    stig_id: V-72171
+    arch_specific: no
+  - command: newgrp
+    stig_id: V-72165
+    arch_specific: no
+  - command: open
+    stig_id: V-72125
+    arch_specific: yes
+  - command: openat
+    stig_id: V-72127
+    arch_specific: yes
+  - command: open_by_handle_at
+    stig_id: V-72129
+    arch_specific: yes
+  - command: pam_timestamp_check
+    path: /sbin
+    stig_id: V-72185
+    arch_specific: no
+  - command: passwd
+    stig_id: V-72149
+    arch_specific: no
+  - command: postdrop
+    path: /usr/sbin
+    stig_id: V-72175
+    arch_specific: no
+  - command: postqueue
+    path: /usr/sbin
+    stig_id: V-72177
+    arch_specific: no
+  - command: removexattr
+    stig_id: V-72117
+    arch_specific: yes
+  - command: rename
+    stig_id: V-72199
+    arch_specific: yes
+  - command: renameat
+    stig_id: V-72201
+    arch_specific: yes
+  - command: restorecon
+    path: /usr/sbin
+    stig_id: V-72141
+    arch_specific: no
+  - command: rmdir
+    stig_id: V-72203
+    arch_specific: yes
+  - command: semanage
+    path: /usr/sbin
+    stig_id: V-72135
+    arch_specific: no
+  - command: setsebool
+    path: /usr/sbin
+    stig_id: V-72137
+    arch_specific: no
+  - command: setxattr
+    stig_id: V-72111
+    arch_specific: yes
+  - command: su
+    path: /bin
+    stig_id: V-72159
+    arch_specific: no
+  - command: sudo
+    stig_id: V-72161
+    arch_specific: no
+  - command: sudoedit
+    path: /bin
+    stig_id: V-72169
+    arch_specific: no
+  - command: truncate
+    stig_id: V-72131
+    arch_specific: yes
+  - command: umount
+    path: /bin
+    stig_id: V-72173
+    arch_specific: no
+  - command: unix_chkpwd
+    path: /sbin
+    stig_id: V-72151
+    arch_specific: no
+  - command: unlink
+    stig_id: V-72205
+    arch_specific: yes
+  - command: unlinkat
+    stig_id: V-72207
+    arch_specific: yes
+  - command: userhelper
+    path: /usr/sbin
+    stig_id: V-72157
+    arch_specific: no

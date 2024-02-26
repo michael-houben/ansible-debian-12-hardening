@@ -1,0 +1,43 @@
+---
+- name: Miscellaneous - Set proper permissions on admin home directory
+  file:
+    dest: "/home/{{ admin_username }}"
+    mode: "g-ws,o-rwxt"
+
+- name: Miscellaneous - Update permissions for directory /etc/sudoers.d
+  file:
+    path: /etc/sudoers.d
+    state: directory
+    mode: "0750"
+
+- name: Miscellaneous - Set timezone
+  community.general.timezone:
+    name: "{{ timezone }}"
+
+- name: Miscellaneous - Install chrony
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+    - chrony
+
+- name: Miscellaneous - Start and enable chronyd
+  ansible.builtin.systemd:
+    name: chronyd.service
+    enabled: yes
+    state: started
+    masked: no
+
+- name: Miscellaneous - Check if chrony configuration file exists
+  ansible.builtin.stat:
+    path: "/etc/chrony.conf"
+  register: chrony_conf_check
+
+- name: Miscellaneous - Copy motd banner
+  ansible.builtin.template:
+    src: motd.j2
+    dest: "/etc/motd"
+    owner: root
+    group: root
+    mode: '0755'

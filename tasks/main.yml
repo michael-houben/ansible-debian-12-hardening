@@ -1,0 +1,25 @@
+---
+- ansible.builtin.import_tasks: apt.yml
+
+- ansible.builtin.import_tasks: auditd.yml
+  when:
+    - auditd_enabled | bool
+
+- ansible.builtin.import_tasks: laurel.yml
+  when:
+    - laurel_enabled | bool
+    - auditd_enabled | bool
+
+- ansible.builtin.import_tasks: apparmor.yml
+
+- ansible.builtin.import_tasks: ufw.yml
+
+- ansible.builtin.import_tasks: fail2ban.yml
+
+- ansible.builtin.import_tasks: sshd.yml
+
+- ansible.builtin.import_tasks: misc.yml
+
+- ansible.builtin.import_tasks: kernel.yml
+
+- ansible.builtin.import_tasks: lynis.yml

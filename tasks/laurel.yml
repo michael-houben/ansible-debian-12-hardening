@@ -1,0 +1,32 @@
+---
+- name: LAUREL - Install LAUREL package
+  ansible.builtin.apt:
+    name: laurel
+    state: present
+
+- name: LAUREL - Configure LAUREL
+  ansible.builtin.copy:
+    src: laurel_config.toml
+    dest: /etc/laurel/config.toml
+    owner: root
+    group: root
+    mode: 0640
+  register: laurel_config
+
+- name: LAUREL - Configure auditd to use LAUREL
+  ansible.builtin.copy:
+    src: laurel_auditd_config.conf
+    dest: /etc/audit/plugins.d/laurel.conf
+    owner: root
+    group: root
+    mode: 0640
+  register: laurel_config
+
+- name: LAUREL - Tell auditd(8) to re-evaluate its configuration
+  ansible.builtin.shell: "pkill -HUP auditd"
+  changed_when: false
+  ignore_errors: yes
+  when:
+    - laurel_config.changed
+  notify:
+    - Restart auditd

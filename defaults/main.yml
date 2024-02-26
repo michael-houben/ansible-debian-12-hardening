@@ -1,0 +1,109 @@
+---
+## Apt
+apt_auto_upgrades_enabled: yes
+
+## SSHD
+sshd_port: 22
+sshd_ciphers: "aes256-gcm@openssh.com,chacha20-poly1305@openssh.com,aes256-ctr"
+sshd_macs: "hmac-sha2-256,hmac-sha2-512"
+sshd_kexalgorithms: "ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256"
+
+## Admin username - used to set proper permissions on admin user's home directory
+admin_username: "__edit_me__" # e.g. admin
+
+## Mail-Relay Port
+## will be used to create an outgoing allow rule in ufw
+mail_port: 587
+
+## Fail2ban SSH
+fail2ban_bantime: 3600 # 1 Hour
+
+## Misc
+## System reboot required for kernel updates and kernel module hardening
+system_reboot_enabled: yes
+
+## Send Lynis Report by mail
+lynis_email_report: yes
+lynis_email_rcpt: "__edit_me__" # email recipient, e.g. admin@example.com
+
+network_ipv6_disabled: yes
+timezone: Europe/Berlin
+login_message: >
+    You are accessing a secured system and your actions will be logged along
+    with identifying information. Disconnect immediately if you are not an
+    authorized user of this system.
+
+## Audit daemon (auditd)
+## Configurations based on RHEL7 STIG
+auditd_enabled: yes
+laurel_enabled: yes
+## Set the auditd failure flag.
+## 0: In the event of an auditing failure, do nothing.
+## 1: In the event of an auditing failure, write messages to the kernel log.
+## 2: In the event of an auditing failure, cause a kernel panic
+audit_failure_flag: 1                         # V-72081
+## Set the action to take when the disk is full or network events cannot be sent.
+auditd_disk_full_action: syslog               # V-72087
+auditd_network_failure_action: syslog         # V-72087
+## Size of remaining disk space (in MB) that triggers alerts.
+auditd_space_left: "{{ (ansible_facts['mounts'] | selectattr('mount', 'equalto', '/') | map(attribute='size_total') | first * 0.25 / 1024 / 1024) | int }}" # V-72089
+## Action to take when the space_left threshold is reached.
+auditd_space_left_action: email               # V-72091
+## Send auditd email alerts to this user.
+auditd_action_mail_acct: root                 # V-72093
+## Add audit rules for commands/syscalls.
+audit_chsh: yes                               # V-72167
+audit_chage: yes                              # V-72155
+audit_chcon: yes                              # V-72139
+audit_chmod: no                               # V-72105
+audit_chown: no                               # V-72097
+audit_creat: yes                              # V-72123
+audit_crontab: yes                            # V-72183
+audit_delete_module: yes                      # V-72189
+audit_fchmod: no                              # V-72107
+audit_fchmodat: no                            # V-72109
+audit_fchown: no                              # V-72099
+audit_fchownat: no                            # V-72103
+audit_fremovexattr: no                        # V-72119
+audit_fsetxattr: no                           # V-72113
+audit_ftruncate: yes                          # V-72133
+audit_init_module: yes                        # V-72187
+audit_gpasswd: yes                            # V-72153
+audit_lchown: no                              # V-72101
+audit_lremovexattr: no                        # V-72121
+audit_lsetxattr: no                           # V-72115
+audit_mount: yes                              # V-72171
+audit_newgrp: yes                             # V-72165
+audit_open: yes                               # V-72125
+audit_openat: yes                             # V-72127
+audit_open_by_handle_at: yes                  # V-72129
+audit_pam_timestamp_check: yes                # V-72185
+audit_passwd: yes                             # V-72149
+audit_postdrop: yes                           # V-72175
+audit_postqueue: yes                          # V-72177
+audit_removexattr: no                         # V-72117
+audit_rename: yes                             # V-72199
+audit_renameat: yes                           # V-72201
+audit_restorecon: yes                         # V-72141
+audit_rmdir: yes                              # V-72203
+audit_semanage: yes                           # V-72135
+audit_setsebool: yes                          # V-72137
+audit_setxattr: no                            # V-72111
+audit_ssh_keysign: yes                        # V-72179
+audit_su: yes                                 # V-72159
+audit_sudo: yes                               # V-72161
+audit_sudoedit: yes                           # V-72169
+audit_truncate: yes                           # V-72131
+audit_umount: yes                             # V-72173
+audit_unix_chkpwd: yes                        # V-72151
+audit_unlink: yes                             # V-72205
+audit_unlinkat: yes                           # V-72207
+audit_userhelper: yes                         # V-72157
+
+## Add audit rules for other events.
+audit_account_access: yes                     # V-72143
+audit_sudo_config_changes: yes                # V-72163
+audit_insmod: yes                             # V-72191
+audit_rmmod: yes                              # V-72193
+audit_modprobe: yes                           # V-72195
+audit_account_actions: yes                    # V-72197

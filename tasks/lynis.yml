@@ -1,0 +1,29 @@
+- name: Prepare Lynis Installation
+  shell: |
+    wget -O - https://packages.cisofy.com/keys/cisofy-software-public.key | apt-key add -
+    echo "deb https://packages.cisofy.com/community/lynis/deb/ stable main" | tee /etc/apt/sources.list.d/cisofy-lynis.list
+
+- name: Update and Upgrade
+  apt:
+    update_cache: yes
+    upgrade: yes
+
+- name: Install Lynis and colorized-logs (for ansi2html)
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - lynis
+    - colorized-logs
+
+- name: Update and run first Lynis Audit
+  shell: |
+    lynis update info
+    lynis audit system | ansi2html -l > /tmp/lynis-report-{{ ansible_hostname }}.html 
+  
+- name: Send Lynis Report by mail 
+  shell: |
+    echo "Lynis report, see attachment" | mail -A /tmp/lynis-report-{{ ansible_hostname }}.html -s "[{{ ansible_hostname }}] Lynis report" {{ lynis_email_rcpt }}
+  when:
+    - lynis_email_report | bool
+  
