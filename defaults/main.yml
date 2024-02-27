@@ -1,4 +1,15 @@
 ---
+## Admin username - used to set proper permissions on admin user's home directory
+admin_username: "__edit_me__" # e.g. admin
+
+## Send Lynis Report by mail
+lynis_email_report: yes
+lynis_email_rcpt: "__edit_me__" # email recipient, e.g. admin@example.com
+
+## Mail-Relay Port
+## will be used to create an outgoing allow rule in ufw
+mail_port: 587
+
 ## Apt
 apt_auto_upgrades_enabled: yes
 
@@ -8,23 +19,12 @@ sshd_ciphers: "aes256-gcm@openssh.com,chacha20-poly1305@openssh.com,aes256-ctr"
 sshd_macs: "hmac-sha2-256,hmac-sha2-512"
 sshd_kexalgorithms: "ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256"
 
-## Admin username - used to set proper permissions on admin user's home directory
-admin_username: "__edit_me__" # e.g. admin
-
-## Mail-Relay Port
-## will be used to create an outgoing allow rule in ufw
-mail_port: 587
-
 ## Fail2ban SSH
 fail2ban_bantime: 3600 # 1 Hour
 
 ## Misc
 ## System reboot required for kernel updates and kernel module hardening
 system_reboot_enabled: yes
-
-## Send Lynis Report by mail
-lynis_email_report: yes
-lynis_email_rcpt: "__edit_me__" # email recipient, e.g. admin@example.com
 
 network_ipv6_disabled: yes
 timezone: Europe/Berlin
