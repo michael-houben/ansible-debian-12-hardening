@@ -13,9 +13,9 @@ This role applies security hardening configurations to systems running Debian 12
 * OpenSSH
 * UFW Firewall
 
-Some of these configurations can be enabled/disabled in `defaults/main.yml`. Please make sure to edit at least all variables with  `__edit_me__` placeholder in `defaults/main.yml`.
+Some of these configurations can be enabled/disabled in [`defaults/main.yml`](https://github.com/michael-houben/ansible-debian-12-hardening/blob/main/defaults/main.yml). Please make sure to edit at least all variables with  `__edit_me__` placeholder in [`defaults/main.yml`](https://github.com/michael-houben/ansible-debian-12-hardening/blob/main/defaults/main.yml).
 
-After applying the configurations, a Lynis security audit is performed and a report is sent to an e-mail address defined in `defaults/main.yml`.
+After applying the configurations, a Lynis security audit is performed and a report is sent to an e-mail address defined in [`defaults/main.yml`](https://github.com/michael-houben/ansible-debian-12-hardening/blob/main/defaults/main.yml).
 
 ## Requirements
 Requires Ansible 2.10 or later.
@@ -32,7 +32,7 @@ None
       become: yes
       become_method: sudo
       roles:
-        - ansible-debian-12-xyz
+        - ansible-debian-12-hardening
 
 ## Example Inventory
 
