@@ -60,3 +60,16 @@
     dest: /etc/apt/apt.conf.d/20auto-upgrades
   when:
     - apt_auto_upgrades_enabled | bool
+
+- name: Apt - Remove deprecated or insecure packages
+  ansible.builtin.apt:
+    name: "{{ apt_packages_to_remove_list }}"
+    state: absent
+    purge: true
+  when: apt_remove_packages | bool
+
+
+
+
+
+

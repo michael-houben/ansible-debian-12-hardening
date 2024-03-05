@@ -12,6 +12,11 @@ mail_port: 587
 
 ## Apt
 apt_auto_upgrades_enabled: yes
+apt_remove_packages: yes
+
+# List of deprecated or insecure packages to remove if installed
+apt_packages_to_remove_list: "inetutils-telnetd, rsh-server, xinetd"    
+
 
 ## SSHD
 sshd_port: 22
